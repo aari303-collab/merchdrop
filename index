@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ Arina Official Merch</title>
+<link href="https://fonts.googleapis.com/css2?family=Itim&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --bg:#fff6f8; --card:#ffffff; --primary:#ff8fab; --dark:#4a3f44; --mid:#8a7a81; --light:#fbe4e9; }
+
+body { font-family:'Itim', cursive; background:var(--bg); color:var(--dark); min-height:100vh; display:flex; flex-direction:column; background-attachment: fixed; background-size: cover; background-position: center; transition: background-color 0.3s, background-image 0.5s; font-size: 1.05rem; }
+
+.page { display:none; flex: 1; }
+.page.active { display:block; animation: fadeUp 0.4s ease both; }
+.container { max-width:800px; margin:20px auto; padding:30px 20px 50px; width: 100%; background: rgba(255,255,255,0.9); border-radius: 20px; box-shadow: 0 10px 30px rgba(255, 143, 171, 0.15); backdrop-filter: blur(8px); }
+
+#loadingScreen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.spinner { font-size:3rem; animation:bounce 1s infinite alternate; margin-bottom:15px; }
+@keyframes bounce { from { transform:translateY(0); } to { transform:translateY(-15px); } }
+
+.header { text-align:center; margin-bottom:30px; }
+.header h1 { font-family:'Lora', serif; font-size:2.5rem; line-height:1.2; margin-bottom:10px; color:var(--primary); text-shadow: 1px 1px 0px rgba(0,0,0,0.05); }
+.header p { font-size:1.1rem; color:var(--mid); line-height:1.6; white-space:pre-wrap; }
+.section-label { font-size:1.1rem; letter-spacing:1px; text-transform:uppercase; color:var(--primary); margin-bottom:15px; border-bottom: 2px dashed var(--light); padding-bottom: 5px; }
+
+#closedBanner { display:none; background:#ffccd5; color:#c9184a; border:2px dashed #c9184a; padding:20px; border-radius:14px; text-align:center; margin-bottom:20px; font-size: 1.2rem; }
+
+/* 🌟 เปลี่ยน Layout สินค้าให้เป็น Grid 🌟 */
+.product-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:20px; margin-bottom:30px; }
+.product-card { background:var(--card); border:2px solid var(--light); border-radius:16px; padding:15px; text-align:center; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+.product-card:hover { border-color:var(--primary); transform:translateY(-3px); box-shadow:0 8px 20px rgba(255,143,171,0.2); }
+.product-card.selected { border-color:var(--primary); background:#fff0f3; }
+.product-img { width:100%; height:200px; object-fit:cover; border-radius:12px; background:var(--light); margin-bottom:12px; display:flex; align-items:center; justify-content:center; font-size:2rem; }
+.product-info h3 { font-size:1.15rem; margin-bottom:5px; color:var(--dark); }
+.product-info p { font-size:0.9rem; color:var(--mid); line-height:1.3; margin-bottom:10px; height: 35px; overflow: hidden; }
+.product-price { color:var(--primary); font-size:1.2rem; font-weight:bold; }
+
+.qty-controls { display:none; align-items:center; justify-content:center; gap:12px; margin-top:12px; }
+.product-card.selected .qty-controls { display:flex; }
+.qbtn { width:32px; height:32px; border-radius:50%; border:2px solid var(--primary); background:none; color:var(--primary); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.qbtn:hover { background:var(--primary); color:#fff; }
+.qnum { min-width:25px; text-align:center; font-size:1.2rem; font-weight:bold; }
+
+.form-section { background:var(--card); border-radius:20px; padding:24px 20px; margin-bottom:18px; border:2px solid var(--light); }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:1rem; color:var(--dark); margin-bottom:8px; font-weight:bold; }
+input, textarea, select { width:100%; padding:14px; border:2px solid var(--light); border-radius:10px; font-family:'Itim', cursive; font-size:1rem; background:var(--bg); outline:none; transition:0.2s; }
+input:focus, textarea:focus, select:focus { border-color:var(--primary); background:#fff; }
+
+.btn { width:100%; padding:16px; border-radius:12px; font-family:'Itim', cursive; font-size:1.2rem; cursor:pointer; transition:0.2s; margin-bottom:10px; border:none; text-align:center; }
+.btn-primary { background:var(--primary); color:#fff; font-weight:bold; letter-spacing: 1px; }
+.btn-primary:hover { filter:brightness(0.9); transform:scale(0.98); }
+.btn-secondary { background:none; color:var(--mid); border:2px solid var(--light); }
+.btn-secondary:hover { border-color:var(--primary); color:var(--primary); }
+
+.r-box { background:var(--card); border:2px dashed var(--primary); border-radius:16px; padding:20px; margin-bottom:20px; }
+.r-item { display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.1rem; }
+.r-shipping { display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.05rem; color:var(--mid); border-bottom:1px solid var(--light); padding-bottom:10px; }
+.r-total { display:flex; justify-content:space-between; font-size:1.3rem; color:var(--primary); margin-top:10px; padding-top:10px; font-weight:bold; }
+
+/* Admin Styles */
+.nav-bar { display:flex; gap:8px; margin-bottom:24px; overflow-x:auto; padding-bottom:5px; }
+.nav-btn { flex:1; min-width:100px; padding:12px; border-radius:10px; background:var(--card); border:2px solid var(--light); font-size:1rem; color:var(--mid); cursor:pointer; text-align:center; white-space:nowrap; }
+.nav-btn.active { background:var(--dark); color:#fff; border-color:var(--dark); }
+.admin-tab-content { display:none; }
+.admin-tab-content.active { display:block; animation:fadeUp 0.3s ease both; }
+.order-card { background:var(--card); border:2px solid var(--light); border-radius:14px; padding:20px; margin-bottom:15px; position:relative; }
+.order-card .time { position:absolute; top:18px; right:18px; font-size:0.85rem; color:var(--mid); font-family:sans-serif; }
+.edit-menu-row { background:var(--card); border:2px solid var(--light); border-radius:12px; padding:16px; margin-bottom:16px; display:grid; grid-template-columns:1fr; gap:12px; }
+
+footer { text-align:center; padding:20px; font-size:0.9rem; margin-top:auto; background:rgba(255,255,255,0.5); backdrop-filter:blur(5px); border-radius: 20px 20px 0 0; }
+footer a { color:var(--dark); text-decoration:none; cursor:pointer; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="spinner">✨</div>
+  <h3 style="color:var(--primary); font-size: 1.5rem;">กำลังโหลดหน้าร้าน...</h3>
+</div>
+
+<!-- หน้าบ้าน -->
+<div id="orderPage" class="page container">
+  <div class="header">
+    <h1 id="uiShopName">Arina Official Merch</h1>
+    <p id="uiShopDesc">Welcome!</p>
+  </div>
+  <div id="closedBanner">⛔ ขออภัยค่ะ ตอนนี้ร้านปิดรับออเดอร์ชั่วคราว</div>
+  <div id="orderFormArea">
+    <div class="section-label">🛍️ เลือกสินค้า (Select Items)</div>
+    <div class="product-grid" id="menuList"></div>
+    <div class="form-section">
+      <div class="section-label">📦 ข้อมูลจัดส่ง (Shipping Details)</div>
+      <div class="field"><label>ชื่อ-นามสกุล *</label><input type="text" id="fname" placeholder="ชื่อของคุณลูกค้า"></div>
+      <div class="field"><label>เบอร์โทรศัพท์ / LINE ID *</label><input type="text" id="fphone" placeholder="ช่องทางการติดต่อ"></div>
+      <div class="field"><label>ที่อยู่จัดส่ง *</label><textarea id="faddress" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></textarea></div>
+      <div class="field"><label>หมายเหตุ (optional)</label><input type="text" id="fnotes" placeholder="เช่น ไซส์เสื้อ, ลายที่ต้องการพิเศษ..."></div>
+    </div>
+    <button class="btn btn-primary" onclick="goToReview()">ตรวจสอบออเดอร์ ✦</button>
+  </div>
+</div>
+
+<!-- หน้าทบทวนออเดอร์ -->
+<div id="reviewPage" class="page container">
+  <div class="header"><h1>Review <em>Order</em></h1></div>
+  <div class="r-box">
+    <div class="section-label">สรุปรายการสินค้า</div>
+    <div id="reviewItems" style="margin-bottom:10px;"></div>
+    <div class="r-shipping"><span>ค่าสินค้า</span><span id="reviewSubtotal">฿0</span></div>
+    <div class="r-shipping" style="border:none;"><span>ค่าจัดส่ง</span><span id="reviewShipping">฿0</span></div>
+    <div class="r-total"><span>ยอดรวมทั้งหมด</span><span id="reviewTotal">฿0</span></div>
+    <div class="section-label" style="margin-top:25px;">ที่อยู่จัดส่ง</div>
+    <div id="reviewContact" style="font-size:1.1rem; font-weight:bold;"></div>
+    <div id="reviewAddress" style="font-size:1rem; color:var(--mid); margin-top:5px; line-height:1.5;"></div>
+  </div>
+  <button class="btn btn-primary" id="btnConfirm" onclick="confirmOrder()">ยืนยันและสั่งซื้อสินค้า</button>
+  <button class="btn btn-secondary" onclick="showPage('orderPage')">กลับไปแก้ไข</button>
+</div>
+
+<!-- หน้าชำระเงิน TipMe -->
+<div id="thankPage" class="page container" style="text-align:center; padding-top:40px;">
+  <div style="font-size:4rem; margin-bottom:10px;">💖</div>
+  <h2 style="font-size: 2rem; margin-bottom:10px; color:var(--primary);">Order Received!</h2>
+  <p style="color:var(--mid); margin-bottom:20px; font-size:1.2rem;">ได้รับออเดอร์แล้ว ขอบคุณที่สนับสนุนอารินะนะคะ ✨</p>
+  <div class="r-box" style="text-align:center; padding: 25px 20px;">
+    <div style="border-bottom:2px dashed var(--light); padding-bottom:15px; margin-bottom:15px;">
+      <div style="font-size:1.1rem; color:var(--mid); margin-bottom:5px;">ยอดชำระเงินทั้งหมด</div>
+      <div id="thankYouTotal" style="font-size:2.8rem; color:var(--primary); font-weight:bold;">฿0</div>
+    </div>
+    <div style="font-size:1.1rem; line-height:1.6; color:var(--dark);">
+      <strong>💳 ช่องทางการชำระเงิน</strong><br>
+      <span style="font-size:1rem; color:var(--mid);">สามารถโอนผ่าน TipMe ได้ที่ลิงก์นี้เลยค่ะ:</span><br>
+      <a href="https://tipme.in.th/k-arina" target="_blank" style="color:var(--primary); font-weight:bold; font-size:1.2rem; text-decoration:underline; display:inline-block; margin-top:10px;">
+        tipme.in.th/k-arina
+      </a>
+    </div>
+    <a href="https://tipme.in.th/k-arina" target="_blank" class="btn btn-primary" style="display:block; text-decoration:none; margin-top:20px;">คลิกเพื่อชำระเงิน ↗</a>
+  </div>
+  <button class="btn btn-secondary" onclick="resetForm()">สั่งซื้อสินค้าเพิ่ม</button>
+</div>
+
+<!-- ระบบแอดมิน (ย่อไว้ในไฟล์เดียว) -->
+<div id="adminLoginPage" class="page container">
+  <div class="r-box" style="text-align:center;">
+    <h2>Admin Login</h2>
+    <div class="field" style="margin-top:20px;">
+      <input type="password" id="adminPin" placeholder="Enter PIN" style="text-align:center; font-family:sans-serif;">
+    </div>
+    <button class="btn btn-primary" onclick="loginAdmin()">Login</button>
+    <button class="btn btn-secondary" onclick="showPage('orderPage')">Cancel</button>
+  </div>
+</div>
+
+<div id="ownerPage" class="page container">
+  <div class="header" style="text-align:left; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="color:var(--primary); margin:0;">Dashboard</h2>
+    <button class="btn btn-secondary btn-small" style="width:auto; margin:0;" onclick="showPage('orderPage')">ดูหน้าร้าน ↗</button>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-btn active" onclick="switchAdminTab('tabSummary', this)">📊 สรุปยอด</div>
+    <div class="nav-btn" onclick="switchAdminTab('tabOrders', this)">📋 ออเดอร์</div>
+    <div class="nav-btn" onclick="switchAdminTab('tabSettings', this)">⚙️ ตั้งค่าร้าน</div>
+  </div>
+
+  <div id="tabSummary" class="admin-tab-content active">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+      <div style="background:var(--card); border:2px solid var(--light); border-radius:14px; padding:20px; text-align:center;">
+        <h3 style="font-size:1rem; color:var(--mid);">ยอดขายรวม</h3>
+        <div id="statRev" style="font-size:2rem; color:var(--primary); font-weight:bold;">฿0</div>
+      </div>
+      <div style="background:var(--card); border:2px solid var(--light); border-radius:14px; padding:20px; text-align:center;">
+        <h3 style="font-size:1rem; color:var(--mid);">จำนวนออเดอร์</h3>
+        <div id="statCount" style="font-size:2rem; color:var(--primary); font-weight:bold;">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabOrders" class="admin-tab-content">
+    <button class="btn btn-secondary" style="margin-bottom:15px;" onclick="loadAdminData()">รีเฟรชข้อมูล ↻</button>
+    <div id="adminOrdersList"></div>
+  </div>
+
+  <div id="tabSettings" class="admin-tab-content">
+    <div class="form-section">
+      <div class="section-label">ตั้งค่าร้านค้า</div>
+      <div class="field"><label>สถานะร้าน</label><select id="setIsOpen"><option value="true">🟢 เปิดรับออเดอร์</option><option value="false">🔴 ปิดร้านชั่วคราว</option></select></div>
+      <div class="field"><label>ชื่อร้าน</label><input type="text" id="setShopName"></div>
+      <div class="field"><label>ข้อความต้อนรับ</label><textarea id="setShopDesc"></textarea></div>
+      <div class="field"><label>ค่าจัดส่ง (฿)</label><input type="number" id="setShippingFee"></div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-label">ธีมและดีไซน์</div>
+      <div class="field"><label>สีประจำร้าน</label><input type="color" id="setThemeColor" style="height:50px; cursor:pointer; padding: 5px;"></div>
+      <div class="field">
+        <label>ภาพพื้นหลัง (URL)</label>
+        <img id="bgPreview" style="width:100%; max-height:200px; object-fit:cover; display:none; border-radius:10px; margin-bottom:10px; border:2px solid var(--light);">
+        <input type="text" id="setBgImage" placeholder="วางลิงก์รูปลงที่นี่ (เพื่อความรวดเร็วของเว็บ)" oninput="updateBgPreview()">
+        <button class="btn btn-secondary btn-small" style="margin-top:10px;" onclick="clearBgImage()">🗑️ ลบรูปพื้นหลัง</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+        จัดการสินค้า <button class="btn btn-primary btn-small" style="width:auto; margin:0;" onclick="addMenuItem()">+ เพิ่มสินค้า</button>
+      </div>
+      <div id="menuEditorList"></div>
+    </div>
+    <button class="btn btn-primary" id="btnSaveAdmin" onclick="saveAdminSettings()">บันทึกการตั้งค่าทั้งหมด</button>
+  </div>
+</div>
+
+<footer><a onclick="showPage('adminLoginPage')">Admin Login</a></footer>
+
+<script>
+// ════════════════════════════════════════════════════════════
+const API_URL = "https://script.google.com/macros/s/AKfycbzhVmWqbf-P8cpxwakLtqQZPWSTBXNqEybYYFetoplH7ex7FnWFuJTj5sy7B3tqUye-6A/exec
+"; 
+const ADMIN_PIN = "admin1234";
+// ════════════════════════════════════════════════════════════
+
+let SHOP_SETTINGS = {};
+let MENU = [];
+let ORDERS = [];
+const cart = {};
+let currentOrder = null;
+
+window.onload = () => {
+  if (API_URL === "ใส่ลิงก์_WEB_APP_URL_ของคูณเบลล์ตรงนี้") {
+    alert("อย่าลืมนำ API_URL อันใหม่มาใส่นะคะ ✨");
+    document.getElementById('loadingScreen').style.display = 'none';
+    return;
+  }
+  fetch(`${API_URL}?action=getShopData`)
+    .then(res => res.json())
+    .then(data => {
+      SHOP_SETTINGS = data.settings;
+      MENU = data.menu;
+      applyShopSettings();
+      renderMenu();
+      document.getElementById('loadingScreen').style.display = 'none';
+      showPage('orderPage');
+    }).catch(err => {
+      console.error(err);
+      document.getElementById('loadingScreen').style.display = 'none';
+    });
+};
+
+function applyShopSettings() {
+  document.getElementById('uiShopName').textContent = SHOP_SETTINGS.shopName;
+  document.getElementById('uiShopDesc').textContent = SHOP_SETTINGS.shopDesc;
+  if(SHOP_SETTINGS.themeColor) document.documentElement.style.setProperty('--primary', SHOP_SETTINGS.themeColor);
+  
+  if (SHOP_SETTINGS.bgImage) {
+    document.body.style.backgroundImage = `url(${SHOP_SETTINGS.bgImage})`;
+  } else {
+    document.body.style.backgroundImage = "none";
+  }
+
+  if (SHOP_SETTINGS.isOpen) {
+    document.getElementById('closedBanner').style.display = 'none';
+    document.getElementById('orderFormArea').style.display = 'block';
+  } else {
+    document.getElementById('closedBanner').style.display = 'block';
+    document.getElementById('orderFormArea').style.display = 'none';
+  }
+}
+
+function renderMenu() {
+  document.getElementById('menuList').innerHTML = MENU.map(m => {
+    const imgHtml = m.image ? `<img src="${m.image}" class="product-img">` : `<div class="product-img">✨</div>`;
+    return `
+    <div class="product-card" id="row-${m.id}" onclick="toggleItem('${m.id}')">
+      ${imgHtml}
+      <div class="product-info">
+        <h3>${m.name}</h3>
+        <p>${m.desc}</p>
+        <div class="product-price">฿${m.price}</div>
+      </div>
+      <div class="qty-controls" onclick="event.stopPropagation()">
+        <div class="qbtn" onclick="changeQty('${m.id}',-1)">-</div>
+        <div class="qnum" id="q-${m.id}">${cart[m.id] || 1}</div>
+        <div class="qbtn" onclick="changeQty('${m.id}',1)">+</div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  Object.keys(cart).forEach(id => {
+    const row = document.getElementById('row-'+id);
+    if(row) row.classList.add('selected');
+  });
+}
+
+function toggleItem(id) {
+  const row = document.getElementById('row-'+id);
+  if (cart[id]) {
+    delete cart[id];
+    row.classList.remove('selected');
+  } else {
+    cart[id] = 1;
+    row.classList.add('selected');
+    document.getElementById('q-'+id).textContent = 1;
+  }
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id] += delta;
+  if (cart[id] <= 0) {
+    delete cart[id];
+    document.getElementById('row-'+id).classList.remove('selected');
+  } else {
+    document.getElementById('q-'+id).textContent = cart[id];
+  }
+}
+
+function goToReview() {
+  const name = document.getElementById('fname').value.trim();
+  const phone = document.getElementById('fphone').value.trim();
+  const address = document.getElementById('faddress').value.trim();
+  const notes = document.getElementById('fnotes').value.trim();
+
+  if (!name || !phone || !address) return alert('กรุณากรอกข้อมูลจัดส่งให้ครบถ้วนค่ะ');
+  if (Object.keys(cart).length === 0) return alert('กรุณาเลือกสินค้าอย่างน้อย 1 ชิ้นค่ะ ✨');
+
+  const items = Object.entries(cart).map(([id, qty]) => {
+    const m = MENU.find(x => x.id === id);
+    return { name:m.name, qty, price:m.price, subtotal:m.price*qty };
+  });
+  
+  const subtotal = items.reduce((s, i) => s+i.subtotal, 0);
+  const shipping = Number(SHOP_SETTINGS.shippingFee) || 0;
+  const grandTotal = subtotal + shipping;
+
+  const itemsForDb = [...items];
+  if(shipping > 0) itemsForDb.push({ name: "+ ค่าจัดส่ง", qty: 1, subtotal: shipping });
+
+  currentOrder = {
+    action: "newOrder",
+    time: new Date().toLocaleString('th-TH'),
+    name, phone, address, notes, items: itemsForDb, total: grandTotal
+  };
+
+  document.getElementById('reviewItems').innerHTML = items.map(it => 
+    `<div class="r-item"><span>${it.name} (x${it.qty})</span><span>฿${it.subtotal}</span></div>`
+  ).join('');
+  
+  document.getElementById('reviewSubtotal').textContent = `฿${subtotal}`;
+  document.getElementById('reviewShipping').textContent = `฿${shipping}`;
+  document.getElementById('reviewTotal').textContent = `฿${grandTotal}`;
+  document.getElementById('reviewContact').textContent = `${name} (${phone})`;
+  document.getElementById('reviewAddress').innerHTML = address.replace(/\n/g,'<br>');
+
+  showPage('reviewPage');
+}
+
+function confirmOrder() {
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true;
+  btn.textContent = "กำลังส่งออเดอร์...";
+  document.getElementById('thankYouTotal').textContent = '฿' + currentOrder.total.toLocaleString();
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(currentOrder)
+  }).then(() => {
+    btn.disabled = false;
+    btn.textContent = "ยืนยันและสั่งซื้อสินค้า";
+    showPage('thankPage');
+  }).catch(() => {
+    alert("ระบบออฟไลน์: บันทึกข้อมูลเรียบร้อยแล้ว");
+    btn.disabled = false;
+    btn.textContent = "ยืนยันและสั่งซื้อสินค้า";
+    showPage('thankPage');
+  });
+}
+
+function resetForm() {
+  Object.keys(cart).forEach(id => delete cart[id]);
+  renderMenu();
+  ['fname','fphone','faddress','fnotes'].forEach(id => document.getElementById(id).value = '');
+  showPage('orderPage');
+}
+
+function loginAdmin() {
+  if (document.getElementById('adminPin').value === ADMIN_PIN) {
+    document.getElementById('adminPin').value = '';
+    showPage('ownerPage');
+    loadAdminData();
+  } else {
+    alert("รหัสผ่านไม่ถูกต้อง");
+  }
+}
+
+function switchAdminTab(tabId, btnEl) {
+  document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btnEl.classList.add('active');
+}
+
+function loadAdminData() {
+  document.getElementById('adminOrdersList').innerHTML = "กำลังโหลดข้อมูล...";
+  fetch(`${API_URL}?action=getAdminData`)
+    .then(res => res.json())
+    .then(data => {
+      ORDERS = data.orders;
+      SHOP_SETTINGS = data.settings;
+      MENU = data.menu;
+      
+      document.getElementById('statCount').textContent = ORDERS.length;
+      const totalRev = ORDERS.reduce((sum, o) => sum + Number(o.total), 0);
+      document.getElementById('statRev').textContent = `฿${totalRev.toLocaleString()}`;
+
+      if(ORDERS.length === 0) {
+        document.getElementById('adminOrdersList').innerHTML = `<p style="text-align:center; color:var(--mid);">ยังไม่มีออเดอร์</p>`;
+      } else {
+        document.getElementById('adminOrdersList').innerHTML = ORDERS.map(o => `
+          <div class="order-card">
+            <div class="time">${o.time}</div>
+            <div style="font-size:1.2rem; font-weight:bold;">${o.name}</div>
+            <div style="font-size:0.95rem; color:var(--mid); margin-bottom:12px;">📞 ${o.phone}</div>
+            <div style="background:var(--bg); padding:10px; border-radius:8px; font-size:0.95rem; margin-bottom:12px;">${o.address.replace(/\n/g,'<br>')}</div>
+            <div style="font-size:0.95rem; border-top:1px solid var(--light); padding-top:10px;">${o.items}</div>
+            <div style="font-size:1.1rem; color:var(--primary); font-weight:bold; margin-top:10px;">ยอดรวม: ฿${o.total.toLocaleString()}</div>
+            ${o.notes ? `<div style="font-size:0.9rem; color:var(--mid); margin-top:5px; background:var(--light); padding:5px 10px; border-radius:5px;">📝 หมายเหตุ: ${o.notes}</div>` : ''}
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('setIsOpen').value = SHOP_SETTINGS.isOpen ? "true" : "false";
+      document.getElementById('setShopName').value = SHOP_SETTINGS.shopName;
+      document.getElementById('setShopDesc').value = SHOP_SETTINGS.shopDesc;
+      document.getElementById('setShippingFee').value = SHOP_SETTINGS.shippingFee || 0;
+      document.getElementById('setThemeColor').value = SHOP_SETTINGS.themeColor || "#ff8fab";
+      
+      const savedBg = SHOP_SETTINGS.bgImage || "";
+      document.getElementById('setBgImage').value = savedBg;
+      updateBgPreview();
+      renderMenuEditor();
+    });
+}
+
+function updateBgPreview() {
+  const val = document.getElementById('setBgImage').value;
+  if(val) {
+      document.getElementById('bgPreview').src = val;
+      document.getElementById('bgPreview').style.display = 'block';
+  } else {
+      document.getElementById('bgPreview').style.display = 'none';
+  }
+}
+
+function clearBgImage() {
+  document.getElementById('bgPreview').style.display = 'none';
+  document.getElementById('setBgImage').value = '';
+}
+
+function renderMenuEditor() {
+  const container = document.getElementById('menuEditorList');
+  container.innerHTML = MENU.map((m, index) => {
+    return `
+    <div class="edit-menu-row">
+      <div>
+        <label style="font-size:0.9rem; font-weight:bold;">ภาพสินค้า (URL)</label>
+        <input type="text" placeholder="วางลิงก์รูปที่นี่..." value="${m.image || ''}" class="m-image" style="margin-bottom:10px;">
+        ${m.image ? `<img src="${m.image}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;">` : ''}
+      </div>
+      <div>
+        <label style="font-size:0.9rem; font-weight:bold;">ชื่อสินค้า</label>
+        <input type="text" placeholder="เช่น เสื้อยืด, สติ๊กเกอร์" value="${m.name}" class="m-name" style="margin-bottom:10px;">
+        <label style="font-size:0.9rem; font-weight:bold;">รายละเอียด</label>
+        <input type="text" placeholder="ขนาด, สี..." value="${m.desc}" class="m-desc" style="margin-bottom:10px;">
+        <input type="hidden" value="${m.id}" class="m-id">
+      </div>
+      <div>
+        <label style="font-size:0.9rem; font-weight:bold;">ราคา</label>
+        <input type="number" placeholder="ราคา" value="${m.price}" class="m-price" style="margin-bottom:10px;">
+        <button class="btn btn-secondary" style="color:var(--red); border-color:var(--red);" onclick="removeMenuItem(${index})">ลบสินค้านี้</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+function addMenuItem() {
+  MENU.push({ id: 'p' + Date.now(), image: '', name: '', desc: '', price: 0 });
+  renderMenuEditor();
+}
+
+function removeMenuItem(index) {
+  if(confirm("แน่ใจหรือไม่ที่จะลบสินค้านี้?")) {
+    MENU.splice(index, 1);
+    renderMenuEditor();
+  }
+}
+
+function saveAdminSettings() {
+  const btn = document.getElementById('btnSaveAdmin');
+  btn.disabled = true;
+  btn.textContent = "กำลังบันทึก...";
+
+  const newSettings = {
+    isOpen: document.getElementById('setIsOpen').value === "true",
+    shopName: document.getElementById('setShopName').value,
+    shopDesc: document.getElementById('setShopDesc').value,
+    shippingFee: Number(document.getElementById('setShippingFee').value) || 0,
+    themeColor: document.getElementById('setThemeColor').value,
+    bgImage: document.getElementById('setBgImage').value
+  };
+
+  const newMenu = [];
+  const rows = document.querySelectorAll('.edit-menu-row');
+  rows.forEach((row) => {
+    newMenu.push({
+      id: row.querySelector('.m-id').value,
+      image: row.querySelector('.m-image').value,
+      name: row.querySelector('.m-name').value,
+      price: Number(row.querySelector('.m-price').value),
+      desc: row.querySelector('.m-desc').value
+    });
+  });
+
+  const payload = { action: "saveAdminSettings", settings: newSettings, menu: newMenu };
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    btn.disabled = false;
+    btn.textContent = "บันทึกการตั้งค่าทั้งหมด";
+    alert("บันทึกการตั้งค่าเรียบร้อยแล้วค่ะ! ✨");
+    SHOP_SETTINGS = newSettings;
+    MENU = newMenu;
+    applyShopSettings();
+    renderMenu();
+  }).catch(() => {
+    alert("เกิดข้อผิดพลาดในการบันทึก");
+    btn.disabled = false;
+    btn.textContent = "บันทึกการตั้งค่าทั้งหมด";
+  });
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
